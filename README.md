@@ -33,12 +33,7 @@ LabelmeToMaskApp is ideal for researchers and developers working with labeled im
 **Future Enhancements:**
 Future updates may include:
 - Batch processing capabilities for handling large datasets more efficiently.
-- Integration with cloud storage services for seamless data synchronization.
 - Enhanced error logging and reporting features for better troubleshooting.
 
 **Conclusion:**
 LabelmeToMaskApp empowers users to convert Labelme annotations to image masks effortlessly, ensuring compatibility and efficiency in data preprocessing tasks. With its intuitive interface and robust functionality, it caters to both novice and experienced users in the field of computer vision and machine learning.
-
----
-
-Feel free to adjust and expand this description based on additional features or specific aspects of your application!

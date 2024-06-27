@@ -8,9 +8,9 @@ import time
 import cv2
 import labelme
 import numpy as np
-from PyQt5.QtCore import QThread, pyqtSignal, QUrl, QObject, Qt
+from PyQt5.QtCore import QThread, pyqtSignal, QUrl, QObject
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
-    QPushButton, QFileDialog, QProgressBar, QDesktopWidget, QTextEdit, QMessageBox
+    QPushButton, QFileDialog, QProgressBar, QTextEdit
 from PyQt5.QtGui import QDesktopServices
 
 # 全局变量用于存储配置文件路径
@@ -95,7 +95,7 @@ class LabelmeToMaskWindow(QMainWindow):
 
         self.setWindowTitle("LabelmeToMask App")
         self.default_width = 800
-        self.default_height = 400
+        self.default_height = 350
         self.resize(self.default_width, self.default_height)
         self.center()
 
