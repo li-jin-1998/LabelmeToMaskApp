@@ -1,10 +1,6 @@
 # [LabelmeToMaskApp](https://github.com/li-jin-1998/LabelmeToMaskApp)
 
-To generate a project description for your LabelmeToMaskApp, here's a structured outline you can use:
-
 ---
-
-**Project Description: LabelmeToMaskApp**
 
 **Overview:**
 LabelmeToMaskApp is a versatile desktop application designed to streamline the conversion process of Labelme annotations into corresponding image masks. Built using PyQt5, the application provides a user-friendly interface for managing datasets, configuring directories, and executing conversion tasks efficiently.
@@ -18,13 +14,10 @@ LabelmeToMaskApp is a versatile desktop application designed to streamline the c
    
 4. **User Interface:** Offers an intuitive GUI with progress bars, runtime indicators, and error handling for smooth operation.
    
-5. **Configuration Persistence:** Saves user preferences such as default directories, window size, and position using a JSON configuration file.
 
 **Technologies Used:**
-- **Python:** Core language for application logic and backend processing.
 - **PyQt5:** GUI framework for creating the interactive user interface.
 - **OpenCV (cv2):** Image processing library for handling image and mask generation.
-- **NumPy:** Used for efficient numerical operations on arrays, especially in image manipulation.
 - **PyInstaller:** Tool used for packaging the application into a single executable file (.exe) for easy distribution.
 
 **PyInstaller Installation Guide:**
