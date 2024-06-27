@@ -13,7 +13,7 @@ ax.text(-0.5, 0, 'L', fontsize=100, fontweight='bold', va='center', ha='center',
 ax.text(0.5, 0, 'M', fontsize=100, fontweight='bold', va='center', ha='center', alpha=0.5, color='blue')
 
 # 保存图像到文件，设置透明背景
-plt.savefig('LM_logo.png', transparent=True, bbox_inches='tight', pad_inches=0)
+plt.savefig('LM_logo.png', transparent=False, bbox_inches='tight', pad_inches=0)
 
 # 显示图像
 plt.show()

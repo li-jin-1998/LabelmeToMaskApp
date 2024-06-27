@@ -27,6 +27,12 @@ LabelmeToMaskApp is a versatile desktop application designed to streamline the c
 - **NumPy:** Used for efficient numerical operations on arrays, especially in image manipulation.
 - **PyInstaller:** Tool used for packaging the application into a single executable file (.exe) for easy distribution.
 
+**PyInstaller Installation Guide:**
+```
+pyinstaller --clean main.spec
+```
+
+
 **Usage Scenario:**
 LabelmeToMaskApp is ideal for researchers and developers working with labeled image datasets, enabling them to quickly transform Labelme annotations into machine-readable formats like image masks. By simplifying the conversion process and providing robust directory management, it enhances productivity in preparing data for machine learning tasks.
 
