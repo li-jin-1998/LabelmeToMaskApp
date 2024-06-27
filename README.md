@@ -21,6 +21,13 @@ LabelmeToMaskApp is a versatile desktop application designed to streamline the c
 - **PyInstaller:** Tool used for packaging the application into a single executable file (.exe) for easy distribution.
 
 **PyInstaller Installation Guide:**
+
+```
+pip install labelme
+pip install opencv-python-headless
+pip install pyinstaller
+```
+
 ```
 pyinstaller --clean main.spec
 ```
