@@ -9,14 +9,15 @@ import cv2
 import labelme
 import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal, QUrl, QObject
+from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
     QPushButton, QFileDialog, QProgressBar, QTextEdit
-from PyQt5.QtGui import QDesktopServices
 
 # 全局变量用于存储配置文件路径
 CONFIG_FILE = 'LabelmeToMask.json'
 
 suffixes = ['png', 'tif']
+
 
 class WorkerSignals(QObject):
     progress_updated = pyqtSignal(int)
@@ -25,22 +26,23 @@ class WorkerSignals(QObject):
     operation_error = pyqtSignal(str)
     log_message = pyqtSignal(str)
 
+
 class WorkerThread(QThread):
-    def __init__(self, directories=None):
+    def __init__(self, data_dir=None):
         super().__init__()
         self._is_running = True
-        self.directories = directories
+        self.data_dir = data_dir
         self.signals = WorkerSignals()
 
     def run(self):
         try:
-            self.labelme_to_mask(self.directories[0])
+            self.labelme_to_mask(self.data_dir)
         except Exception as e:
             self.signals.operation_error.emit(str(e))
 
     def labelme_to_mask(self, input_path):
         output_path = os.path.join(input_path, 'dataset')
-        self.signals.log_message.emit(f"-"*100)
+        self.signals.log_message.emit(f"-" * 100)
         self.signals.log_message.emit(f"Converting {input_path} to {output_path}")
         if os.path.exists(output_path):
             self.signals.log_message.emit(f"Output directory {output_path} already exists. Deleting it...")
@@ -48,7 +50,7 @@ class WorkerThread(QThread):
         os.makedirs(output_path, exist_ok=True)
         class_name_to_id = {'gum': 0, '0': 1, '2': 2, '3': 3, '4': 4}
 
-        json_file_names = glob.glob(os.path.join(input_path, '*.json'))
+        json_file_names = sorted(glob.glob(os.path.join(input_path, '*.json')))
         self.signals.log_message.emit(f"Found {len(json_file_names)} json files in {input_path}")
         self.signals.log_message.emit(f"-" * 100)
         start_time = time.time()
@@ -89,6 +91,7 @@ class WorkerThread(QThread):
     def stop(self):
         self._is_running = False
 
+
 class LabelmeToMaskWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -99,37 +102,35 @@ class LabelmeToMaskWindow(QMainWindow):
         self.resize(self.default_width, self.default_height)
         self.center()
 
-        self.default_directories = self.load_default_directories()
+        self.data_dir = self.load_default_directory()
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
 
         self.layout = QVBoxLayout(self.central_widget)
 
-        self.directory_layouts = []
-        directories = ["data_dir"]
-        for directory_name in directories:
-            self.add_directory_input(directory_name)
+        self.directory_layout = QHBoxLayout()
+        self.add_directory_input("Data Directory")
 
         self.add_buttons_and_output_panel()
 
         self.threads = {}
+
     def center(self):
         screen = QApplication.primaryScreen()
         screen_size = screen.availableSize()
         self.move((screen_size.width() - self.width()) // 2, (screen_size.height() - self.height()) // 2)
-    def add_directory_input(self, directory_name):
-        directory_layout = QHBoxLayout()
-        label = QLabel(f"{directory_name} :")
-        directory_layout.addWidget(label)
-        directory_input = QLineEdit(self.default_directories[0])
-        directory_input.editingFinished.connect(self.save_default_directories)
-        directory_layout.addWidget(directory_input)
+
+    def add_directory_input(self, label_text):
+        label = QLabel(f"{label_text}:")
+        self.directory_layout.addWidget(label)
+        self.directory_input = QLineEdit(self.data_dir)
+        self.directory_input.editingFinished.connect(self.save_default_directory)
+        self.directory_layout.addWidget(self.directory_input)
         browse_button = QPushButton("Browse")
-        browse_button.clicked.connect(lambda state, line_edit=directory_input: self.browse_directory(line_edit))
-        directory_layout.addWidget(browse_button)
-        self.directory_layouts.append((directory_name, directory_input))
-        self.layout.addLayout(directory_layout)
+        browse_button.clicked.connect(self.browse_directory)
+        self.directory_layout.addWidget(browse_button)
+        self.layout.addLayout(self.directory_layout)
 
     def add_buttons_and_output_panel(self):
         confirm_button = QPushButton("Confirm Directory")
@@ -183,13 +184,13 @@ class LabelmeToMaskWindow(QMainWindow):
 
         return buttons_layout
 
-    def browse_directory(self, line_edit):
-        current_directory = line_edit.text()
+    def browse_directory(self):
+        current_directory = self.directory_input.text()
         parent_directory = os.path.abspath(os.path.join(current_directory, os.pardir))
         directory = QFileDialog.getExistingDirectory(self, "Select Directory", parent_directory)
         if directory:
-            line_edit.setText(directory)
-            self.save_default_directories()
+            self.directory_input.setText(directory)
+            self.save_default_directory()
 
     def confirm_directory(self):
         for operation, thread in self.threads.items():
@@ -198,13 +199,16 @@ class LabelmeToMaskWindow(QMainWindow):
                 thread.wait()
 
         self.reset_operation_widgets()
-        self.default_directories = [self.directory_layouts[0][1].text()]
-        self.output_panel.append(f"Current Directory:\nData Directory: {self.default_directories[0]}")
+        self.data_dir = self.directory_input.text()
+        if not os.path.exists(self.data_dir):
+            self.output_panel.append(f"Directory not found: {self.data_dir}")
+            return
+        self.output_panel.append(f"Current Directory:\nData Directory: {self.data_dir}")
 
     def perform_operation(self):
         self.reset_operation_widgets()
 
-        thread = WorkerThread(directories=self.default_directories)
+        thread = WorkerThread(data_dir=self.data_dir)
         thread.signals.progress_updated.connect(self.progress_bar.setValue)
         thread.signals.runtime_updated.connect(lambda runtime: self.runtime_label.setText(f"{runtime:.2f} s"))
         thread.signals.operation_finished.connect(self.operation_finished)
@@ -220,8 +224,7 @@ class LabelmeToMaskWindow(QMainWindow):
             self.operation_finished("Labelme to mask")
 
     def delete_dataset(self):
-        directory = self.default_directories[0]
-        dataset_dir = os.path.join(directory, 'dataset')
+        dataset_dir = os.path.join(self.data_dir, 'dataset')
         if os.path.exists(dataset_dir):
             shutil.rmtree(dataset_dir)
             self.output_panel.append(f"Deleted directory: {dataset_dir}")
@@ -229,8 +232,7 @@ class LabelmeToMaskWindow(QMainWindow):
             self.output_panel.append(f"Directory not found: {dataset_dir}")
 
     def open_dataset(self):
-        directory = self.default_directories[0]
-        dataset_dir = os.path.join(directory, 'dataset')
+        dataset_dir = os.path.join(self.data_dir, 'dataset')
         if os.path.exists(dataset_dir):
             QDesktopServices.openUrl(QUrl.fromLocalFile(dataset_dir))
         else:
@@ -252,23 +254,23 @@ class LabelmeToMaskWindow(QMainWindow):
         self.stop_button.setEnabled(True)
         self.progress_bar.setValue(0)
 
-    def load_default_directories(self):
+    def load_default_directory(self):
         try:
             with open(CONFIG_FILE, "r") as f:
                 config = json.load(f)
-            return config.get("default_directories", [""])
+            return config.get("default_directory", "")
         except FileNotFoundError:
-            return [""]
+            return ""
 
-    def save_default_directories(self):
-        directories = [directory_input.text() for _, directory_input in self.directory_layouts]
-        config = {"default_directories": directories}
+    def save_default_directory(self):
+        config = {"default_directory": self.directory_input.text()}
         with open(CONFIG_FILE, "w") as f:
             json.dump(config, f)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = LabelmeToMaskWindow()
     window.show()
-    app.aboutToQuit.connect(window.save_default_directories)
+    app.aboutToQuit.connect(window.save_default_directory)
     sys.exit(app.exec_())
