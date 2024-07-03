@@ -75,7 +75,8 @@ class WorkerThread(QThread):
                 mask[lbl == 2] = 255
                 mask[lbl == 3] = 192
                 mask[lbl == 4] = 64
-                cv2.imwrite(out_mask_file, mask)
+                # cv2.imwrite(out_mask_file, mask)
+                cv2.imencode(os.path.splitext(out_mask_file)[1], mask)[1].tofile(out_mask_file)
                 shutil.copy(file_name.replace('json', suffix), out_img_file)
 
                 elapsed_time = time.time() - start_time
