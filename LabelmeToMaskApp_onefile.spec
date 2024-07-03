@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['main.py'],
+    ['LabelmeToMaskApp.py'],
     pathex=[],
     binaries=[],
     datas=[],

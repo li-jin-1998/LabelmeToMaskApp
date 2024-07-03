@@ -29,7 +29,11 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pyinstaller
 ```
 
 ```
-pyinstaller --clean main.spec
+pyinstaller --name LabelmeToMaskApp --onefile --icon='LM_logo.png' --windowed LabelmeToMaskApp.py
+pyinstaller --name LabelmeToMaskApp --icon='LM_logo.png' --windowed LabelmeToMaskApp.py
+
+pyinstaller --clean LabelmeToMaskApp.spec
+pyinstaller --clean LabelmeToMaskApp_onefile.spec
 ```
 
 
