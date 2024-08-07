@@ -19,6 +19,22 @@ CONFIG_FILE = 'LabelmeToMask.json'
 suffixes = ['png', 'tif']
 
 
+def gray_to_color_mask(gray_image):
+    custom_colormap = np.zeros((6, 3), dtype=np.uint8)
+
+    custom_colormap[0] = [0, 0, 0]
+    custom_colormap[1] = [64, 64, 64]
+    custom_colormap[2] = [129, 129, 129]
+    custom_colormap[3] = [64, 255, 64]
+    custom_colormap[4] = [255, 255, 255]
+    custom_colormap[5] = [255, 129, 64]
+
+    color_image = custom_colormap[gray_image]
+    # color_image = cv2.applyColorMap(gray_image, cv2.COLORMAP_JET)
+    # color_image = cv2.addWeighted(origin_image, 1, color_image, 1-alpha, 0)
+    return color_image
+
+
 class WorkerSignals(QObject):
     progress_updated = pyqtSignal(int)
     runtime_updated = pyqtSignal(float)
@@ -48,7 +64,7 @@ class WorkerThread(QThread):
             self.signals.log_message.emit(f"Output directory {output_path} already exists. Deleting it...")
             shutil.rmtree(output_path)
         os.makedirs(output_path, exist_ok=True)
-        class_name_to_id = {'gum': 0, '0': 1, '2': 2, '3': 3, '4': 4}
+        class_name_to_id = {'gum': 0, '0': 1, '2': 2, '3': 3, '4': 4, '5': 5}
 
         json_file_names = sorted(glob.glob(os.path.join(input_path, '*.json')))
         self.signals.log_message.emit(f"Found {len(json_file_names)} json files in {input_path}")
@@ -70,14 +86,26 @@ class WorkerThread(QThread):
                     shapes=label_file.shapes,
                     label_name_to_value=class_name_to_id)
                 mask = np.zeros_like(lbl)
-                mask[lbl == 0] = 129
+                # mask[lbl == 0] = 129
+                # mask[lbl == 1] = 0
+                # mask[lbl == 2] = 255
+                # mask[lbl == 3] = 192
+                # mask[lbl == 4] = 64
+                # mask[lbl == 5] = 32
+                mask[lbl == 0] = 2
                 mask[lbl == 1] = 0
-                mask[lbl == 2] = 255
-                mask[lbl == 3] = 192
-                mask[lbl == 4] = 64
-                # cv2.imwrite(out_mask_file, mask)
-                cv2.imencode(os.path.splitext(out_mask_file)[1], mask)[1].tofile(out_mask_file)
-                shutil.copy(file_name.replace('json', suffix), out_img_file)
+                mask[lbl == 2] = 4
+                mask[lbl == 3] = 3
+                mask[lbl == 4] = 1
+                mask[lbl == 5] = 5
+                if 5 in mask:
+                    mask = gray_to_color_mask(mask)
+                    cv2.imencode(os.path.splitext(out_mask_file)[1], mask)[1].tofile(out_mask_file)
+                    shutil.copy(file_name.replace('json', suffix),
+                                os.path.join(output_path, os.path.basename(file_name.replace('json', suffix))))
+                    shutil.copy(file_name, os.path.join(output_path, os.path.basename(file_name)))
+                # cv2.imencode(os.path.splitext(out_mask_file)[1], mask)[1].tofile(out_mask_file)
+                # shutil.copy(file_name.replace('json', suffix), out_img_file)
 
                 elapsed_time = time.time() - start_time
                 self.signals.runtime_updated.emit(elapsed_time)
