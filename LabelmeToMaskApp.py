@@ -98,7 +98,8 @@ class WorkerThread(QThread):
                 mask[lbl == 3] = 3
                 mask[lbl == 4] = 1
                 mask[lbl == 5] = 5
-                if 5 in mask:
+                # if 3 in mask:
+                if True:
                     mask = gray_to_color_mask(mask)
                     cv2.imencode(os.path.splitext(out_mask_file)[1], mask)[1].tofile(out_mask_file)
                     shutil.copy(file_name.replace('json', suffix),
